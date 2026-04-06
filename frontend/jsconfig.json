@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "*": ["./src/*"]
+    },
+    "target": "es6",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "forceConsistentCasingInFileNames": true
+  },
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,50 @@
+body {
+  margin: 0;
+  background: #020617;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Glass UI */
+.glass-panel {
+  background: rgba(24, 24, 27, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Neon button */
+.neon-button {
+  background: linear-gradient(90deg, #a855f7, #9333ea);
+  transition: all 0.3s ease;
+}
+
+.neon-button:hover {
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.6);
+  transform: translateY(-1px);
+}
+
+.neon-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Smooth inputs */
+input,
+select {
+  transition: all 0.3s ease;
+}
+
+/* Error animation */
+.text-red-400 {
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

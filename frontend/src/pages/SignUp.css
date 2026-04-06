@@ -1,0 +1,75 @@
+/* SignUp.css */
+
+/* Base */
+body {
+  margin: 0;
+  background: #020617;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Glass effect */
+.glass-panel {
+  background: rgba(24, 24, 27, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Neon button */
+.neon-button {
+  background: linear-gradient(90deg, #06b6d4, #22d3ee);
+  transition: all 0.3s ease;
+}
+
+.neon-button:hover {
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.6);
+  transform: translateY(-1px);
+}
+
+.neon-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Smooth inputs */
+input, select {
+  transition: all 0.3s ease;
+}
+
+/* Error animation */
+.text-red-400 {
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fix background blobs interaction */
+.absolute {
+  pointer-events: none;
+}
+
+/* Custom scrollbar for form */
+.form-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.form-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.form-container::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 4px;
+}
+
+.form-container::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}

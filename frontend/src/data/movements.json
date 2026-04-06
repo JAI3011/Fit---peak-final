@@ -1,0 +1,68 @@
+[
+  {
+    "id": 1,
+    "name": "Barbell Deadlift",
+    "category": "Strength",
+    "cues": ["Hinge at hips", "Slack out bar", "Drive through floor"],
+    "image": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop",
+    "videoUrl": "https://youtu.be/op9kVnSso6Q?si=T9uNoq1B4T_X4W_G",
+    "difficulty": "Intermediate",
+    "description": "The deadlift is the ultimate measure of absolute strength. By mastering the hinge and maintaining a solid core, you unlock unparalleled posterior chain power.",
+    "proTip": "Imagine trying to crush an orange in your armpits before you pull – this locks your lats and protects your spine."
+  },
+  {
+    "id": 2,
+    "name": "Air Squat",
+    "category": "Foundations",
+    "cues": ["Hips back & down", "Knees out", "Chest tall"],
+    "image": "https://images.unsplash.com/photo-1566241142559-40e1dab26d16?q=80&w=2070&auto=format&fit=crop",
+    "videoUrl": "https://youtu.be/rMvwVtlqjTE?si=u-zY4S0-kU6f4XW-",
+    "difficulty": "Beginner",
+    "description": "The foundational human movement. Perfecting the air squat ensures mobility and strength for more complex olympic lifting.",
+    "proTip": "Keep the weight in your heels and mid-foot. If your toes lift slightly, you're on the right track."
+  },
+  {
+    "id": 3,
+    "name": "Strict Pull-up",
+    "category": "Strength",
+    "cues": ["Hollow body", "Shoulders down", "Chin over bar"],
+    "image": "https://images.unsplash.com/photo-1598971639058-aba7c52e4a32?q=80&w=2070&auto=format&fit=crop",
+    "videoUrl": "https://youtu.be/HRV5YKKaeVw?si=X9uNoq1B4T_X4W_G",
+    "difficulty": "Advanced",
+    "description": "True upper body pulling prowess. A strict pull-up requires controlled descent and peak engagement.",
+    "proTip": "Drive your elbows down into your back pockets rather than just pulling with your hands."
+  },
+  {
+    "id": 4,
+    "name": "Kettlebell Swing",
+    "category": "Conditioning",
+    "cues": ["Aggressive hinge", "Snap hips", "Eye level apex"],
+    "image": "https://images.unsplash.com/photo-1517838276558-1da583948bc5?q=80&w=2070&auto=format&fit=crop",
+    "videoUrl": "https://youtu.be/sSESPeuyJpU?si=T9uNoq1B4T_X4W_G",
+    "difficulty": "Intermediate",
+    "description": "Explosive hip extension and core stability. The swing is the gateway to kettlebell mastery.",
+    "proTip": "The swing is a hinge, not a squat. Think of your arms as ropes and your hips as the engine."
+  },
+  {
+    "id": 5,
+    "name": "Standard Push-up",
+    "category": "Foundations",
+    "cues": ["Plank position", "Elbows tucked", "Touch chest"],
+    "image": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=2070&auto=format&fit=crop",
+    "videoUrl": "https://youtu.be/IODxDxX7oi4?si=T9uNoq1B4T_X4W_G",
+    "difficulty": "Beginner",
+    "description": "The universal test of horizontal pressing strength and core rigidity.",
+    "proTip": "Screw your hands into the floor as if you're trying to tear a piece of paper to create stable shoulders."
+  },
+  {
+    "id": 6,
+    "name": "Turkish Get-up",
+    "category": "Mobility",
+    "cues": ["Eyes on weight", "Slow transition", "Stay packed"],
+    "image": "https://images.unsplash.com/photo-1541534741688-6078c65b5ec5?q=80&w=2069&auto=format&fit=crop",
+    "videoUrl": "https://youtu.be/06OSvInLX-Y?si=T9uNoq1B4T_X4W_G",
+    "difficulty": "Advanced",
+    "description": "A full-body mobility and stability masterpiece. The TGU explores every plane of movement.",
+    "proTip": "Keep your eyes locked on the weight at all times until you're fully standing."
+  }
+]
