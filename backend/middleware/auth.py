@@ -22,7 +22,7 @@ async def get_current_user(
     try:
         payload = decode_access_token(credentials.credentials)
     except ValueError as e:
-        logger.warning("Token decode failed")
+        logger.warning("Token decode failed for protected route access: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",

@@ -467,7 +467,7 @@ async def toggle_task(user_id: str, task_id: str) -> dict:
     # Fetch, toggle, and save to support true toggling (not just setting to True)
     doc = await db["tasks"].find_one({"userId": user_id, "date": today})
     if not doc:
-        raise HTTPException(status_code=404, detail="Tasks not found")
+        raise HTTPException(status_code=404, detail="No tasks found for today")
         
     updated = False
     for t in doc.get("tasks", []):

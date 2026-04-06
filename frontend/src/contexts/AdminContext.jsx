@@ -211,6 +211,7 @@ export const AdminProvider = ({ children }) => {
     if (window.confirm('Reject this trainer application?')) {
       try {
         const res = await adminAPI.rejectTrainer(trainerId);
+        // Backend marks rejected trainers as inactive; keep them visible for admin audit/history.
         setUsers(prev => prev.map(u => u.id === trainerId ? normalizeUser(res.data) : u));
       } catch (error) {
         console.error("Error rejecting trainer:", error);

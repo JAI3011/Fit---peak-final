@@ -200,7 +200,7 @@ async def change_password(
     if not user_doc:
         raise HTTPException(status_code=404, detail="User not found")
 
-    if not verify_password(payload.current_password, user_doc.get("password_hash", "")):
+    if not verify_password(payload.current_password, user_doc["password_hash"]):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
 
     new_hash = hash_password(payload.new_password)

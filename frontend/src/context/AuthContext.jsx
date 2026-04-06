@@ -66,6 +66,8 @@ export const AuthProvider = ({ children }) => {
 
       try {
         console.log('[AUTH Session Restore] Attempting to restore session with token...');
+        // Token parsing here is used only to pick a restore endpoint, never for auth decisions.
+        // Authorization remains enforced server-side by token verification on the API.
         const tokenPayload = parseTokenPayload(token);
         const tokenRole = tokenPayload?.role;
         const endpoint = tokenRole === 'user' ? '/dashboard' : '/auth/me';

@@ -40,7 +40,13 @@ class Settings(BaseSettings):
                 raise ValueError("DEBUG must be False in production")
             if self.jwt_secret_key == "dev_only_change_me_jwt_secret_key_please":
                 raise ValueError("JWT_SECRET_KEY must be explicitly set in production")
-            localhost_origins = [o for o in self.allowed_origins_list if "localhost" in o or "127.0.0.1" in o]
+            localhost_prefixes = (
+                "http://localhost",
+                "https://localhost",
+                "http://127.0.0.1",
+                "https://127.0.0.1",
+            )
+            localhost_origins = [o for o in self.allowed_origins_list if o.startswith(localhost_prefixes)]
             if localhost_origins:
                 raise ValueError("ALLOWED_ORIGINS cannot include localhost in production")
         return self
