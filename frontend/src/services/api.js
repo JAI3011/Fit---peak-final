@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+
 // Create a base axios instance
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api/v1', // FastAPI backend URL
+  baseURL: API_BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -11,7 +13,7 @@ const api = axios.create({
 });
 
 // Debug initial state
-console.log('[API INIT] api instance created with baseURL:', 'http://localhost:8000/api/v1');
+console.log('[API INIT] api instance created with baseURL:', API_BASE_URL);
 
 export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
@@ -261,4 +263,3 @@ if (typeof window !== 'undefined') {
   window.authDiagnostics = authDiagnostics;
   console.log('[API] Diagnostics available at window.authDiagnostics');
 }
-

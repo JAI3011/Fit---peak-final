@@ -1,6 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from schemas.auth import RegisterRequest, LoginRequest, TokenResponse, AdminCreateRequest, RequestOTPRequest, VerifyOTPAndResetRequest
 from controllers import auth_controller
+from middleware.auth import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -82,3 +83,11 @@ async def verify_otp_and_reset(payload: VerifyOTPAndResetRequest):
     Verifies the OTP and sets a new password in one step.
     """
     return await auth_controller.verify_otp_and_reset(payload)
+
+
+@router.get(
+    "/me",
+    summary="Get current authenticated user profile",
+)
+async def get_me(current_user: dict = Depends(get_current_user)):
+    return {k: v for k, v in current_user.items() if k != "password_hash"}

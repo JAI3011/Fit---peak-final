@@ -24,8 +24,6 @@ class UserUpdateRequest(BaseModel):
     trainer_id: Optional[str] = None
     assigned_workout: Optional[dict] = None
     assigned_diet: Optional[dict] = None
-    status: Optional[Literal["active", "inactive", "pending"]] = None
-    role: Optional[Literal["user", "trainer", "admin"]] = None
 
 
 # ── Admin edit user ───────────────────────────────────────────────
@@ -35,6 +33,11 @@ class AdminUserEditRequest(BaseModel):
     role: Optional[Literal["user", "trainer", "admin"]] = None
     status: Optional[Literal["active", "inactive", "pending"]] = None
     trainer_id: Optional[str] = None
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=6)
 
 
 # ── Public user response ──────────────────────────────────────────

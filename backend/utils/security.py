@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any
-import random
+import secrets
 
 import bcrypt
 from jose import JWTError, jwt
@@ -28,7 +28,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def generate_otp() -> str:
     """Generate a 6-digit numeric OTP."""
-    return f"{random.randint(100000, 999999)}"
+    return f"{secrets.randbelow(900000) + 100000:06d}"
 
 
 # ── JWT helpers ───────────────────────────────────────────────────

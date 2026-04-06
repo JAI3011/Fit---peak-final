@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,6 +25,7 @@ from routers.diet_log_router import router as diet_log_router
 from routers.highlight_router import router as highlight_router
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 
 import asyncio
@@ -103,9 +105,10 @@ app.add_middleware(
 # ── Global exception handler ──────────────────────────────────────
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled server error on %s %s", request.method, request.url.path, exc_info=exc)
     return JSONResponse(
         status_code=500,
-        content={"detail": "Internal server error", "error": str(exc)},
+        content={"detail": "Internal server error"},
     )
 
 

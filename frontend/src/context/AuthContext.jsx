@@ -17,6 +17,16 @@ const isTokenExpired = (token) => {
   }
 };
 
+const parseTokenPayload = (token) => {
+  try {
+    const payloadBase64 = token.split('.')[1];
+    if (!payloadBase64) return null;
+    return JSON.parse(atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/')));
+  } catch {
+    return null;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser]                   = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -56,12 +66,14 @@ export const AuthProvider = ({ children }) => {
 
       try {
         console.log('[AUTH Session Restore] Attempting to restore session with token...');
-        // ✅ Hit /dashboard to get full user profile using stored token
-        const res = await api.get('/dashboard');
+        const tokenPayload = parseTokenPayload(token);
+        const tokenRole = tokenPayload?.role;
+        const endpoint = tokenRole === 'user' ? '/dashboard' : '/auth/me';
+        const res = await api.get(endpoint);
         const userData = res.data;
         console.log('[AUTH Session Restore] ✓ Successfully restored session');
         setUser(userData);
-        setRole(userData.role);
+        setRole(userData.role || tokenRole);
         setIsAuthenticated(true);
       } catch (err) {
         // ✅ Differentiate between token issues (401/403) and infrastructure issues (Network Error/500)

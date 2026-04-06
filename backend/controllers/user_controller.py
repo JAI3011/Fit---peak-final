@@ -130,6 +130,9 @@ async def get_clients_for_trainer(trainer_id: str) -> list[dict]:
 # ── POST assign workout to client ─────────────────────────────────
 async def assign_workout_to_client(client_id: str, plan: dict) -> dict:
     db = get_database()
+    client = await db["users"].find_one({"_id": validate_object_id(client_id), "role": "user"})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
     result = await db["users"].find_one_and_update(
         {"_id": validate_object_id(client_id)},
         {"$set": {"assigned_workout": plan, "updated_at": utc_now_str()}},
@@ -143,6 +146,9 @@ async def assign_workout_to_client(client_id: str, plan: dict) -> dict:
 # ── POST assign diet to client ────────────────────────────────────
 async def assign_diet_to_client(client_id: str, plan: dict) -> dict:
     db = get_database()
+    client = await db["users"].find_one({"_id": validate_object_id(client_id), "role": "user"})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
     result = await db["users"].find_one_and_update(
         {"_id": validate_object_id(client_id)},
         {"$set": {"assigned_diet": plan, "updated_at": utc_now_str()}},
@@ -159,7 +165,7 @@ async def skip_workout(user_id: str) -> dict:
     Adds current ISO datetime to skipped_workout_dates array (no duplicates).
     """
     db = get_database()
-    today = utc_now_str()  # e.g., "2025-04-01T12:00:00Z"
+    today = today_date_str()
 
     result = await db["users"].find_one_and_update(
         {"_id": validate_object_id(user_id)},

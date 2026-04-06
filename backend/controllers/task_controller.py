@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 from bson import ObjectId
 
 from config.database import get_database
-from utils.helpers import doc_to_dict, utc_now_str
+from utils.helpers import doc_to_dict, utc_now_str, today_date_str
 
 
 MISSION_TEMPLATE_VERSION = 2
@@ -67,7 +67,7 @@ def _normalize_trainer_tasks(tasks: list[dict]) -> list[dict]:
 
     if not normalized:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="At least one mission with text is required",
         )
 
@@ -75,12 +75,12 @@ def _normalize_trainer_tasks(tasks: list[dict]) -> list[dict]:
 
 
 def _resolve_assignment_date(date: str | None) -> str:
-    assignment_date = (date or datetime.now().strftime("%Y-%m-%d")).strip()
+    assignment_date = (date or today_date_str()).strip()
     try:
         datetime.strptime(assignment_date, "%Y-%m-%d")
     except ValueError:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Date must be in YYYY-MM-DD format",
         )
 
@@ -291,7 +291,7 @@ def _should_refresh_today_tasks(task_doc: dict) -> bool:
 
 async def get_today_tasks(user_id: str) -> dict:
     db = get_database()
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = today_date_str()
     task_doc = await db["tasks"].find_one({"userId": user_id, "date": today})
 
     profile = {}
@@ -462,12 +462,12 @@ async def clear_trainer_tasks(
 
 async def toggle_task(user_id: str, task_id: str) -> dict:
     db = get_database()
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = today_date_str()
     
     # Fetch, toggle, and save to support true toggling (not just setting to True)
     doc = await db["tasks"].find_one({"userId": user_id, "date": today})
     if not doc:
-        return {"error": "Tasks not found"}
+        raise HTTPException(status_code=404, detail="Tasks not found")
         
     updated = False
     for t in doc.get("tasks", []):

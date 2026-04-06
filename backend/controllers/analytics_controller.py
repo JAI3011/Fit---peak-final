@@ -95,26 +95,21 @@ async def get_workout_logs_data(time_range: str = "week") -> list[dict]:
     now = datetime.now(timezone.utc)
     normalized_range = _validate_time_range(time_range)
 
-    base_count = await db["users"].count_documents(
-        {"role": "user", "assigned_workout": {"$ne": None}}
-    )
-
     if normalized_range == "year":
         periods = _month_periods(now, 12)
         key = "day"
-        multipliers = [0.68, 0.74, 0.81, 0.9, 0.96, 1.02, 1.08, 1.0, 0.94, 0.88, 0.83, 0.77]
     else:
         periods = _day_periods(now, 7 if normalized_range == "week" else 30)
         key = "day"
-        multipliers = [0.7, 0.9, 0.8, 1.0, 1.1, 0.6, 0.5]
 
     data = []
-    for index, (start, end, label) in enumerate(periods):
-        if normalized_range == "year":
-            logs = max(0, round(base_count * multipliers[index % len(multipliers)]))
-        else:
-            weekday = datetime.fromisoformat(start.isoformat()).weekday()
-            logs = max(0, round(base_count * multipliers[weekday]))
+    for start, end, label in periods:
+        logs = await db["workout_logs"].count_documents({
+            "date": {
+                "$gte": start.isoformat(),
+                "$lt": end.isoformat(),
+            },
+        })
         data.append({key: label, "logs": logs})
 
     return data

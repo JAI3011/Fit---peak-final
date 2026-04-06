@@ -17,6 +17,12 @@ async def register_user(payload: RegisterRequest) -> dict:
     db = get_database()
     normalized_email = payload.email.strip().lower()
 
+    if payload.role == "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin accounts cannot be self-registered",
+        )
+
     # Check duplicate email
     existing = await db["users"].find_one({"email": normalized_email})
     if existing:

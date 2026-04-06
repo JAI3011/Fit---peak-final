@@ -46,6 +46,14 @@ const getAchievementVisual = (achievement) => {
   };
 };
 
+const formatGoalLabel = (goal) => {
+  if (!goal) return "Not Set";
+  return goal
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
+
 export default function UserDashboard() {
   const { user, updateProfile } = useFitness();
   const [open, setOpen] = useState(false);
@@ -170,8 +178,8 @@ export default function UserDashboard() {
 
           {/* GOAL PROGRESS */}
           <Card>
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-sm text-zinc-400">Goal: Muscle Gain</h3>
+              <div className="flex justify-between items-center mb-2">
+              <h3 className="text-sm text-zinc-400">Goal: {formatGoalLabel(user.goal)}</h3>
               <Target className="w-4 h-4 text-purple-400" />
             </div>
             <div className="space-y-3">
@@ -187,7 +195,7 @@ export default function UserDashboard() {
                   className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full shadow-[0_0_10px_#d946ef]" 
                 />
               </div>
-              <p className="text-[10px] text-zinc-500 italic">Next milestone: 5kg gain</p>
+              <p className="text-[10px] text-zinc-500 italic">Keep progressing toward your current goal</p>
             </div>
           </Card>
 

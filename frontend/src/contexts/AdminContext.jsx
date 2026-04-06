@@ -67,14 +67,14 @@ export const AdminProvider = ({ children }) => {
       if (!isAuthenticated || authUser?.role !== 'admin') return;
       try {
         const res = await api.get('/settings');
-        // Normalize snake_case from backend → camelCase for frontend
+        // Response keys are already camelCase via api.js interceptor
         setSettings({
-          appName: res.data.app_name || DEFAULT_SETTINGS.appName,
-          supportEmail: res.data.support_email || DEFAULT_SETTINGS.supportEmail,
-          defaultCalorieGoal: res.data.default_calorie_goal || DEFAULT_SETTINGS.defaultCalorieGoal,
+          appName: res.data.appName || DEFAULT_SETTINGS.appName,
+          supportEmail: res.data.supportEmail || DEFAULT_SETTINGS.supportEmail,
+          defaultCalorieGoal: res.data.defaultCalorieGoal || DEFAULT_SETTINGS.defaultCalorieGoal,
           features: {
-            trainerPlanCreation: res.data.features?.trainer_plan_creation ?? true,
-            userLibrary: res.data.features?.user_library ?? true,
+            trainerPlanCreation: res.data.features?.trainerPlanCreation ?? true,
+            userLibrary: res.data.features?.userLibrary ?? true,
           },
         });
       } catch (err) {
@@ -210,8 +210,8 @@ export const AdminProvider = ({ children }) => {
   const rejectTrainer = useCallback(async (trainerId) => {
     if (window.confirm('Reject this trainer application?')) {
       try {
-        await adminAPI.rejectTrainer(trainerId);
-        setUsers(prev => prev.filter(u => u.id !== trainerId));
+        const res = await adminAPI.rejectTrainer(trainerId);
+        setUsers(prev => prev.map(u => u.id === trainerId ? normalizeUser(res.data) : u));
       } catch (error) {
         console.error("Error rejecting trainer:", error);
       }

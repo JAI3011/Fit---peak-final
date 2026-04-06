@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from schemas.user import UserUpdateRequest, AdminUserEditRequest
+from schemas.user import UserUpdateRequest, AdminUserEditRequest, ChangePasswordRequest
 from schemas.common import MessageResponse
 from controllers import user_controller
 from middleware.auth import get_current_user, require_role
@@ -116,7 +116,15 @@ async def remove_user(user_id: str):
     summary="[Trainer] Assign a workout plan to a client",
     dependencies=[Depends(require_role("trainer", "admin"))],
 )
-async def assign_workout(client_id: str, plan: dict):
+async def assign_workout(
+    client_id: str,
+    plan: dict,
+    current_user: dict = Depends(require_role("trainer", "admin")),
+):
+    if current_user["role"] == "trainer":
+        client = await user_controller.get_user_by_id(client_id)
+        if client.get("role") != "user" or client.get("trainer_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="You can only assign plans to your own clients")
     return await user_controller.assign_workout_to_client(client_id, plan)
 
 
@@ -126,7 +134,15 @@ async def assign_workout(client_id: str, plan: dict):
     summary="[Trainer] Assign a diet plan to a client",
     dependencies=[Depends(require_role("trainer", "admin"))],
 )
-async def assign_diet(client_id: str, plan: dict):
+async def assign_diet(
+    client_id: str,
+    plan: dict,
+    current_user: dict = Depends(require_role("trainer", "admin")),
+):
+    if current_user["role"] == "trainer":
+        client = await user_controller.get_user_by_id(client_id)
+        if client.get("role") != "user" or client.get("trainer_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="You can only assign plans to your own clients")
     return await user_controller.assign_diet_to_client(client_id, plan)
 
 # ── POST skip workout ────────────────────────────────────────────────
@@ -172,7 +188,7 @@ async def create_user_by_admin(payload: dict):
 )
 async def change_password(
     user_id: str,
-    payload: dict,  # { current_password, new_password }
+    payload: ChangePasswordRequest,
     current_user: dict = Depends(get_current_user),
 ):
     if current_user["id"] != user_id:
@@ -181,11 +197,13 @@ async def change_password(
     db = get_database()
     from utils.helpers import validate_object_id
     user_doc = await db["users"].find_one({"_id": validate_object_id(user_id)})
+    if not user_doc:
+        raise HTTPException(status_code=404, detail="User not found")
 
-    if not verify_password(payload["current_password"], user_doc["password_hash"]):
+    if not verify_password(payload.current_password, user_doc.get("password_hash", "")):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
 
-    new_hash = hash_password(payload["new_password"])
+    new_hash = hash_password(payload.new_password)
     await db["users"].update_one(
         {"_id": validate_object_id(user_id)},
         {"$set": {"password_hash": new_hash}}
