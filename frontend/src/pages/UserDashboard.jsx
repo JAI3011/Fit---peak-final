@@ -12,6 +12,9 @@ import MacroSummary from "../components/MacroSummary";
 import Counter from "../components/Counter";
 import ProgressChart from "../components/ProgressChart";
 import { useFitness } from "../context/FitnessContext";
+import { userAPI } from "../services/api";
+import { Check, Camera, Utensils } from "lucide-react";
+import toast from "react-hot-toast";
 
 const DEFAULT_ACHIEVEMENTS = [
   { id: "streak-7", title: "7 Day Streak", icon: "flame", unlocked: true },
@@ -44,6 +47,26 @@ const getAchievementVisual = (achievement) => {
     className: "w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:scale-110 transition-transform cursor-help",
     iconClassName: "w-6 h-6 text-white",
   };
+};
+
+const formatGoalLabel = (goal) => {
+  if (!goal) return "Not Set";
+  return goal
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const getGoalMilestoneText = (goal) => {
+  switch (goal) {
+    case "weight_loss":
+      return "Next milestone: 5% body weight reduction";
+    case "endurance":
+      return "Next milestone: longer steady-state sessions";
+    case "muscle_gain":
+      return "Next milestone: 5kg gain";
+    default:
+      return "Next milestone: keep building consistency";
+  }
 };
 
 export default function UserDashboard() {
@@ -171,7 +194,7 @@ export default function UserDashboard() {
           {/* GOAL PROGRESS */}
           <Card>
             <div className="flex justify-between items-center mb-2">
-              <h3 className="text-sm text-zinc-400">Goal: Muscle Gain</h3>
+              <h3 className="text-sm text-zinc-400">Goal: {formatGoalLabel(user.goal)}</h3>
               <Target className="w-4 h-4 text-purple-400" />
             </div>
             <div className="space-y-3">
@@ -187,7 +210,7 @@ export default function UserDashboard() {
                   className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full shadow-[0_0_10px_#d946ef]" 
                 />
               </div>
-              <p className="text-[10px] text-zinc-500 italic">Next milestone: 5kg gain</p>
+                <p className="text-[10px] text-zinc-500 italic">{getGoalMilestoneText(user.goal)}</p>
             </div>
           </Card>
 
@@ -196,15 +219,11 @@ export default function UserDashboard() {
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-sm text-zinc-400">Your Trainer</h3>
-                <p className="text-lg font-bold">{user.trainerName}</p>
+                <p className="text-lg font-bold">{user.trainerName || "Not Assigned"}</p>
               </div>
               <button className="p-2 bg-cyan-500/10 rounded-xl hover:bg-cyan-500/20 transition-colors">
                 <MessageSquare className="w-5 h-5 text-cyan-400" />
               </button>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-zinc-500">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              Online now
             </div>
           </Card>
 
@@ -216,6 +235,20 @@ export default function UserDashboard() {
               carbs={user.macros?.carbs ?? 0} 
               fats={user.macros?.fats ?? 0} 
             />
+          </Card>
+
+          {/* TODAY'S MEALS CHECKLIST */}
+          <Card className="md:col-span-2 xl:col-span-1">
+             <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm text-zinc-400 flex items-center gap-2">
+                  <Utensils className="w-4 h-4 text-cyan-400" />
+                  Today's Meals
+                </h3>
+                <Link to="/user/diet" className="text-[10px] text-cyan-400 hover:underline uppercase font-bold tracking-widest">
+                  View Full Plan
+                </Link>
+             </div>
+             <TodayMealSummary user={user} />
           </Card>
 
           {/* WEEKLY ACTIVITY CHART */}
@@ -280,5 +313,107 @@ export default function UserDashboard() {
         onSave={handleSave}
       />
     </DashboardLayout>
+  );
+}
+
+// ========== HELPER: TODAY'S MEAL SUMMARY ==========
+function TodayMealSummary({ user }) {
+  const { refreshUser } = useFitness();
+  const todayStrFull = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  const todayPlan = user?.diet_schedule?.[todayStrFull] || user?.assignedDiet;
+  const assignedMeals = todayPlan?.meals || [];
+  
+  const [localMeals, setLocalMeals] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTodayLog = async () => {
+      try {
+        const res = await userAPI.getDietHistory();
+        const todayStr = new Date().toISOString().split('T')[0];
+        const todayLog = (res.data || []).find(log => log.date.startsWith(todayStr));
+
+        if (todayLog && todayLog.meals) {
+          setLocalMeals(todayLog.meals);
+        } else {
+          // If no log yet, show assigned plan as default (all not eaten)
+          setLocalMeals(assignedMeals.map(m => ({
+            ...m,
+            eaten: false
+          })));
+        }
+      } catch (err) {
+        console.error("Failed to fetch today's log for dashboard:", err);
+        setLocalMeals(assignedMeals.map(m => ({ ...m, eaten: false })));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTodayLog();
+  }, [assignedMeals.length, user]);
+
+  const handleToggle = async (index) => {
+    const updatedMeals = [...localMeals];
+    updatedMeals[index].eaten = !updatedMeals[index].eaten;
+    setLocalMeals(updatedMeals);
+
+    try {
+      const todayISO = new Date().toISOString().split('T')[0];
+      await userAPI.logDiet({
+        date: `${todayISO}T12:00:00Z`,
+        meals: updatedMeals.map(m => ({
+          name: m.name,
+          eaten: m.eaten,
+          photo_uploaded: m.photoUploaded,
+          calories: m.calories || 0,
+          protein: m.protein || 0,
+          carbs: m.carbs || 0,
+          fats: m.fats || 0,
+          items: m.items || []
+        }))
+      });
+      refreshUser();
+    } catch (err) {
+      console.error("Failed to log meal from dashboard:", err);
+      // Revert optimistic update
+      setLocalMeals(localMeals);
+      toast.error('Failed to log meal. Please try again.');
+    }
+  };
+
+  if (loading) return <div className="text-[10px] text-zinc-500 animate-pulse">Checking today's log...</div>;
+  if (localMeals.length === 0) {
+    return <p className="text-xs text-zinc-500 italic">No meals assigned for today.</p>;
+  }
+
+  return (
+    <div className="space-y-3">
+      {localMeals.map((meal, idx) => (
+        <div 
+          key={idx} 
+          onClick={() => handleToggle(idx)}
+          className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
+            meal.eaten 
+              ? 'bg-emerald-500/10 border-emerald-500/30' 
+              : 'bg-white/2 border-white/5 hover:border-white/10'
+          }`}
+        >
+          <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all shrink-0 ${
+            meal.eaten ? 'bg-emerald-500 border-emerald-500 shadow-lg shadow-emerald-500/20' : 'border-white/10 group-hover:border-emerald-500/50'
+          }`}>
+            {meal.eaten && <Check className="w-4 h-4 text-darkBg font-black" />}
+          </div>
+          <div className="flex-1 min-w-0">
+             <p className={`text-xs font-bold truncate ${meal.eaten ? 'text-zinc-500 line-through' : 'text-white'}`}>
+                {meal.name}
+             </p>
+             <p className="text-[10px] text-zinc-500 uppercase tracking-tighter">
+                {meal.calories} kcal
+             </p>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

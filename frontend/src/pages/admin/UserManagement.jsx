@@ -46,7 +46,6 @@ function AddUserModal({ onClose, onAdd, trainers }) {
     try {
       await onAdd({
         ...form,
-        id: Date.now().toString(),
         joined: new Date().toISOString().split('T')[0],
       });
       setSuccess(true);

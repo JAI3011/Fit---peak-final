@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Save, Utensils, PieChart, Check } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useTrainer } from '../context/TrainerContext';
 
 const MealPlanBuilder = () => {
@@ -34,7 +35,7 @@ const MealPlanBuilder = () => {
 
   const handleSave = async () => {
     if (!planName.trim()) {
-      alert("Please enter a plan name");
+      toast.error("Please enter a plan name");
       return;
     }
 

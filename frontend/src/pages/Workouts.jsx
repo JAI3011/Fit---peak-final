@@ -8,7 +8,8 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Card from '../components/Card';
-import { userAPI } from '../services/api';                  // ✅ new import
+import { userAPI } from '../services/api';
+import toast from 'react-hot-toast';                  // ✅ new import
 
 /* ─── weekly schedule fallback ─── */
 const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -293,7 +294,7 @@ const Workouts = () => {
         setWorkoutStatus('complete');
       } catch (error) {
         console.error('Failed to log workout session:', error);
-        alert('Failed to save workout session. Progress was not updated.');
+        toast.error('Failed to save workout session. Progress was not updated.');
       }
     }
   };
@@ -307,7 +308,7 @@ const Workouts = () => {
       setExercises(normalise(user?.assignedWorkout?.exercises || INITIAL_EXERCISES));
     } catch (error) {
       console.error('Failed to skip workout:', error);
-      alert('Could not skip workout. Please try again.');
+      toast.error('Could not skip workout. Please try again.');
     }
   };
 

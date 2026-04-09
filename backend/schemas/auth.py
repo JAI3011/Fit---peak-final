@@ -12,7 +12,7 @@ class RegisterRequest(BaseModel):
     weight: float = Field(..., ge=10, le=500)
     gender: Literal["male", "female", "other"] = "male"
     goal: Literal["weight_loss", "muscle_gain", "endurance"] = "weight_loss"
-    role: Literal["user", "trainer", "admin"] = "user"
+    role: Literal["user", "trainer"] = "user"
 
 
 # ── Login ─────────────────────────────────────────────────────────

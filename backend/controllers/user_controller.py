@@ -2,7 +2,7 @@ from fastapi import HTTPException, status
 from bson import ObjectId
 
 from config.database import get_database
-from schemas.user import UserUpdateRequest, AdminUserEditRequest
+from schemas.user import AdminUserEditRequest
 from utils.helpers import doc_to_dict, utc_now_str, today_date_str, validate_object_id
 from utils.security import hash_password
 
@@ -53,10 +53,10 @@ async def get_user_by_id(user_id: str) -> dict:
 
 
 # ── PUT update own profile (user / trainer) ───────────────────────
-async def update_user_profile(user_id: str, payload: UserUpdateRequest) -> dict:
+async def update_user_profile(user_id: str, payload: dict) -> dict:
     db = get_database()
 
-    update_data = payload.model_dump(exclude_none=True)
+    update_data = dict(payload)
 
     # Flatten macros to nested dict
     if "macros" in update_data and update_data["macros"]:
@@ -156,10 +156,10 @@ async def assign_diet_to_client(client_id: str, plan: dict) -> dict:
 async def skip_workout(user_id: str) -> dict:
     """
     Record that the user skipped today's workout.
-    Adds current ISO datetime to skipped_workout_dates array (no duplicates).
+    Adds today's date to skipped_workout_dates array (no duplicates).
     """
     db = get_database()
-    today = utc_now_str()  # e.g., "2025-04-01T12:00:00Z"
+    today = today_date_str()  # e.g., "2025-04-01"
 
     result = await db["users"].find_one_and_update(
         {"_id": validate_object_id(user_id)},

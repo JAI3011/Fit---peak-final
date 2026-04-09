@@ -1,50 +1,94 @@
-body {
-  margin: 0;
-  background: #020617;
-  font-family: "Poppins", sans-serif;
+/* FULL BACKGROUND */
+.signin-container {
+  height: 100vh;
+  width: 100%;
+  background-position: center;
+  background-size: cover;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
-/* Glass UI */
+/* DARK OVERLAY */
+.signin-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(2, 6, 23, 0.8) 30%,
+    rgba(2, 6, 23, 0.95) 70%
+  );
+}
+
+/* LEFT TEXT */
+.signin-left-content {
+  position: absolute;
+  left: 80px;
+  z-index: 2;
+  max-width: 500px;
+}
+
+.signin-left-content h1 {
+  font-size: 48px;
+  font-weight: 800;
+  color: white;
+}
+
+.signin-left-content p {
+  color: #94a3b8;
+  margin-top: 10px;
+}
+
+.signin-left-content div {
+  margin-top: 30px;
+}
+
+.signin-left-content div p {
+  margin-bottom: 10px;
+  color: #e2e8f0;
+}
+
+/* RIGHT FORM */
+.signin-right {
+  position: relative;
+  z-index: 2;
+  margin-right: 80px;
+}
+
+/* BACK LINK - TOP LEFT */
+.back-link {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #94a3b8;
+  font-size: 14px;
+  text-decoration: none;
+  transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.back-link span {
+  font-weight: 500;
+}
+
+.back-link:hover {
+  color: #06b6d4;
+  transform: translateX(-5px);
+}
+
+/* GLASS */
 .glass-panel {
-  background: rgba(24, 24, 27, 0.75);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(24, 24, 27, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Neon button */
+/* BUTTON */
 .neon-button {
-  background: linear-gradient(90deg, #a855f7, #9333ea);
-  transition: all 0.3s ease;
-}
-
-.neon-button:hover {
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.6);
-  transform: translateY(-1px);
-}
-
-.neon-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Smooth inputs */
-input,
-select {
-  transition: all 0.3s ease;
-}
-
-/* Error animation */
-.text-red-400 {
-  animation: fadeIn 0.25s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  background: linear-gradient(90deg, #06b6d4, #a855f7);
 }

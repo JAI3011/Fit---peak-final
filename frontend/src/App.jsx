@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 
 // Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -40,6 +41,7 @@ const HighlightsManagement = lazy(() => import("./pages/admin/HighlightsManageme
 function App() {
   return (
     <Router>
+      <Toaster position="top-center" reverseOrder={false} />
       {/* ✅ NO AdminProvider or FeedbackProvider here — already in main.jsx */}
       <Suspense fallback={<div className="p-6 text-center text-sm text-gray-500">Loading page...</div>}>
         <Routes>

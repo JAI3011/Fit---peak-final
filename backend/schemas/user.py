@@ -9,6 +9,18 @@ class MacrosSchema(BaseModel):
     fats: float = 0
 
 
+class AssignedWorkoutSchema(BaseModel):
+    name: Optional[str] = None
+    exercises: list[dict] = []
+    assigned_at: Optional[str] = None
+
+
+class AssignedDietSchema(BaseModel):
+    name: Optional[str] = None
+    meals: list[dict] = []
+    assigned_at: Optional[str] = None
+
+
 # ── User update (profile) ─────────────────────────────────────────
 class UserUpdateRequest(BaseModel):
     name: Optional[str] = Field(None, min_length=2, max_length=100)
@@ -22,10 +34,8 @@ class UserUpdateRequest(BaseModel):
     overall_progress: Optional[float] = Field(None, ge=0, le=100)
     macros: Optional[MacrosSchema] = None
     trainer_id: Optional[str] = None
-    assigned_workout: Optional[dict] = None
-    assigned_diet: Optional[dict] = None
-    status: Optional[Literal["active", "inactive", "pending"]] = None
-    role: Optional[Literal["user", "trainer", "admin"]] = None
+    assigned_workout: Optional[AssignedWorkoutSchema] = None
+    assigned_diet: Optional[AssignedDietSchema] = None
 
 
 # ── Admin edit user ───────────────────────────────────────────────
@@ -35,6 +45,12 @@ class AdminUserEditRequest(BaseModel):
     role: Optional[Literal["user", "trainer", "admin"]] = None
     status: Optional[Literal["active", "inactive", "pending"]] = None
     trainer_id: Optional[str] = None
+
+
+# ── Change password ──────────────────────────────────────────────
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=6)
 
 
 # ── Public user response ──────────────────────────────────────────
@@ -55,8 +71,8 @@ class UserResponse(BaseModel):
     overall_progress: float = 0
     macros: MacrosSchema = MacrosSchema()
     trainer_id: Optional[str] = None
-    assigned_workout: Optional[dict] = None
-    assigned_diet: Optional[dict] = None
+    assigned_workout: Optional[AssignedWorkoutSchema] = None
+    assigned_diet: Optional[AssignedDietSchema] = None
     progress_data: list = []
     client_count: int = 0
     certification: Optional[str] = None

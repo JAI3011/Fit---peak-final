@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
@@ -6,26 +8,26 @@ from utils.security import decode_access_token
 from utils.helpers import doc_to_dict
 
 bearer_scheme = HTTPBearer(auto_error=False)
+logger = logging.getLogger(__name__)
 
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> dict:
     # ✅ FIXED: call get_database() directly — it's a sync factory, not an async dep
-    print(f"[AUTH] get_current_user called | credentials: {credentials}")
+    logger.debug("get_current_user called")
     if credentials is None:
-        print("[AUTH] ❌ NO CREDENTIALS PROVIDED")
+        logger.info("No credentials provided for authenticated request")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required",
             headers={"WWW-Authenticate": "Bearer"},
         )
     try:
-        print(f"[AUTH] Attempting to decode token: {credentials.credentials[:20]}...")
         payload = decode_access_token(credentials.credentials)
-        print(f"[AUTH] ✓ Token decoded successfully | payload: {payload}")
+        logger.debug("Token decoded successfully")
     except ValueError as e:
-        print(f"[AUTH] ❌ Token decode failed: {e}")
+        logger.info("Token decode failed: %s", e)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
@@ -34,7 +36,7 @@ async def get_current_user(
 
     user_id = payload.get("sub")
     if not user_id:
-        print("[AUTH] ❌ NO USER ID IN TOKEN")
+        logger.info("Token payload missing subject claim")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Bad token payload"
@@ -46,13 +48,13 @@ async def get_current_user(
     db = get_database()
     user = await db["users"].find_one({"_id": ObjectId(user_id)})
     if not user:
-        print(f"[AUTH] ❌ USER NOT FOUND | user_id: {user_id}")
+        logger.info("Authenticated user not found")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found"
         )
 
-    print(f"[AUTH] ✓ User authenticated | user_id: {user_id} | role: {user.get('role')}")
+    logger.debug("User authenticated: role=%s", user.get("role"))
     return doc_to_dict(user)
 
 

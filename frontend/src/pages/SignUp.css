@@ -1,75 +1,121 @@
-/* SignUp.css */
-
-/* Base */
-body {
-  margin: 0;
-  background: #020617;
-  font-family: "Poppins", sans-serif;
+/* FULL BACKGROUND */
+.signup-container {
+  height: 100vh;
+  width: 100%;
+  background-position: center;
+  background-size: cover;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-/* Glass effect */
+/* DARK OVERLAY with BLUR */
+.signup-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(12px);
+  background: linear-gradient(
+    to right,
+    rgba(2, 6, 23, 0.7) 30%,
+    rgba(2, 6, 23, 0.9) 70%
+  );
+  z-index: 1;
+}
+
+/* BACK LINK - TOP LEFT */
+.back-link {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #94a3b8;
+  font-size: 14px;
+  text-decoration: none;
+  transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.back-link:hover {
+  color: #06b6d4;
+  transform: translateX(-5px);
+}
+
+/* LEFT TEXT */
+.signup-left-content {
+  position: absolute;
+  left: 80px;
+  z-index: 2;
+  max-width: 500px;
+}
+
+.signup-left-content h1 {
+  font-size: 48px;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 10px;
+}
+
+.signup-left-content p {
+  color: #94a3b8;
+  font-size: 18px;
+}
+
+.signup-left-content div {
+  margin-top: 40px;
+}
+
+.signup-left-content div p {
+  margin-bottom: 15px;
+  color: #e2e8f0;
+  font-size: 16px;
+}
+
+/* RIGHT FORM */
+.signup-right {
+  position: relative;
+  z-index: 2;
+  margin-right: 80px;
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+/* Glass Effect */
 .glass-panel {
-  background: rgba(24, 24, 27, 0.75);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(24, 24, 27, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Neon button */
+/* Custom transitions and states */
 .neon-button {
-  background: linear-gradient(90deg, #06b6d4, #22d3ee);
-  transition: all 0.3s ease;
+  background: linear-gradient(90deg, #06b6d4, #a855f7);
+  transition: 0.3s;
 }
 
-.neon-button:hover {
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.6);
-  transform: translateY(-1px);
+.neon-button:hover:not(:disabled) {
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.6);
+  transform: translateY(-2px);
 }
 
-.neon-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Smooth inputs */
 input, select {
-  transition: all 0.3s ease;
+  transition: border-color 0.3s, background-color 0.3s;
 }
 
-/* Error animation */
-.text-red-400 {
-  animation: fadeIn 0.25s ease-in-out;
-}
-
+/* Animation */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Fix background blobs interaction */
-.absolute {
-  pointer-events: none;
-}
-
-/* Custom scrollbar for form */
-.form-container::-webkit-scrollbar {
-  width: 4px;
-}
-
-.form-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.form-container::-webkit-scrollbar-thumb {
-  background: #3f3f46;
-  border-radius: 4px;
-}
-
-.form-container::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
+.signup-left-content {
+  animation: fadeIn 0.8s ease-out forwards;
 }

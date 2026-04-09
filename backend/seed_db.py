@@ -298,6 +298,8 @@ async def seed():
     print(f"  Done: Inserted {len(session_docs)} trainer sessions")
 
     # Insert settings
+    # Keep the singleton settings document on the string _id "global" so the
+    # controller can always resolve the same document across app restarts.
     await db["settings"].insert_one({
         "_id": "global",
         "app_name": "FitPeak",

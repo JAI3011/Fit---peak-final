@@ -1,11 +1,16 @@
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi import _rate_limit_exceeded_handler
 
 from config.database import connect_db, close_db
 from config.settings import get_settings
+from config.rate_limit import limiter
 
 # ── Routers ───────────────────────────────────────────────────────
 from routers.auth_router import router as auth_router
@@ -24,6 +29,7 @@ from routers.diet_log_router import router as diet_log_router
 from routers.highlight_router import router as highlight_router
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 
 import asyncio
@@ -90,6 +96,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
 # ── CORS ───────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
@@ -103,9 +113,10 @@ app.add_middleware(
 # ── Global exception handler ──────────────────────────────────────
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled exception: %s", exc)
     return JSONResponse(
         status_code=500,
-        content={"detail": "Internal server error", "error": str(exc)},
+        content={"detail": "Internal server error"},
     )
 
 

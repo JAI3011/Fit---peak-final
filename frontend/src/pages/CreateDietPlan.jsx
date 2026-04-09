@@ -12,10 +12,14 @@ export default function CreateDietPlan() {
   const [planName, setPlanName] = useState("");
   const [dailyCalories, setDailyCalories] = useState(2500);
   const [dailyProtein, setDailyProtein] = useState(160);
+  const [dailyCarbs, setDailyCarbs] = useState(280);
+  const [dailyFats, setDailyFats] = useState(70);
+  const [selectedDay, setSelectedDay] = useState("All Days");
   const [meals, setMeals] = useState([
-    { id: '1', name: "Breakfast", time: "07:00", items: [], calories: 0, protein: 0 }
+    { id: '1', name: "Breakfast", time: "07:00", items: [], calories: 0, protein: 0, carbs: 0, fats: 0 }
   ]);
-  const [errors, setErrors] = useState({ planName: "", dailyCalories: "", dailyProtein: "", meals: [] });
+  const days = ["All Days", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const [errors, setErrors] = useState({ planName: "", dailyCalories: "", dailyProtein: "", dailyCarbs: "", dailyFats: "", meals: [] });
   const [isSaving, setIsSaving] = useState(false);
 
   const validateField = (name, value) => {
@@ -30,6 +34,12 @@ export default function CreateDietPlan() {
       case 'dailyProtein':
         if (isNaN(value) || value < 0 || value > 500) return "Must be 0 - 500g";
         break;
+      case 'dailyCarbs':
+        if (isNaN(value) || value < 0 || value > 2000) return "Must be 0 - 2,000g";
+        break;
+      case 'dailyFats':
+        if (isNaN(value) || value < 0 || value > 1000) return "Must be 0 - 1,000g";
+        break;
       case 'meal':
         const mErrors = {};
         if (!value.name) mErrors.name = "Meal name required";
@@ -40,6 +50,8 @@ export default function CreateDietPlan() {
           if (!item.quantity) iErrors.quantity = "Req";
           if (item.calories < 0) iErrors.calories = "Min 0";
           if (item.protein < 0) iErrors.protein = "Min 0";
+          if (item.carbs < 0) iErrors.carbs = "Min 0";
+          if (item.fats < 0) iErrors.fats = "Min 0";
           return Object.keys(iErrors).length > 0 ? iErrors : null;
         });
         if (itemErrors.some(e => e !== null)) mErrors.foodItems = itemErrors;
@@ -59,7 +71,9 @@ export default function CreateDietPlan() {
         time: "",
         items: [],
         calories: 0,
-        protein: 0
+        protein: 0,
+        carbs: 0,
+        fats: 0
       }
     ]);
     setErrors(prev => ({ ...prev, meals: [...prev.meals, null] }));
@@ -112,16 +126,21 @@ export default function CreateDietPlan() {
   };
 
   const updateFoodItem = (mealId, itemIndex, field, value) => {
-    const updatedMeals = meals.map(meal =>
-      meal.id === mealId
-        ? {
-            ...meal,
-            items: meal.items.map((item, i) =>
-              i === itemIndex ? { ...item, [field]: value } : item
-            )
-          }
-        : meal
-    );
+    const updatedMeals = meals.map(meal => {
+      if (meal.id === mealId) {
+        const newItems = meal.items.map((item, i) =>
+          i === itemIndex ? { ...item, [field]: value } : item
+        );
+        // Recalculate parent meal totals
+        const calories = newItems.reduce((s, it) => s + (Number(it.calories) || 0), 0);
+        const protein = newItems.reduce((s, it) => s + (Number(it.protein) || 0), 0);
+        const carbs = newItems.reduce((s, it) => s + (Number(it.carbs) || 0), 0);
+        const fats = newItems.reduce((s, it) => s + (Number(it.fats) || 0), 0);
+        
+        return { ...meal, items: newItems, calories, protein, carbs, fats };
+      }
+      return meal;
+    });
     setMeals(updatedMeals);
     
     // Validate meal
@@ -137,17 +156,21 @@ export default function CreateDietPlan() {
     const pError = validateField('planName', planName);
     const cError = validateField('dailyCalories', dailyCalories);
     const prError = validateField('dailyProtein', dailyProtein);
+    const cbError = validateField('dailyCarbs', dailyCarbs);
+    const ftError = validateField('dailyFats', dailyFats);
     const mErrors = meals.map(meal => validateField('meal', meal));
 
     setErrors({
       planName: pError,
       dailyCalories: cError,
       dailyProtein: prError,
+      dailyCarbs: cbError,
+      dailyFats: ftError,
       meals: mErrors
     });
 
     const hasMErrors = mErrors.some(e => e !== null);
-    return !pError && !cError && !prError && !hasMErrors && meals.length > 0;
+    return !pError && !cError && !prError && !cbError && !ftError && !hasMErrors && meals.length > 0;
   };
 
   const saveDietPlan = async () => {
@@ -159,6 +182,9 @@ export default function CreateDietPlan() {
         name: planName,
         dailyCalories,
         dailyProtein,
+        dailyCarbs,
+        dailyFats,
+        day: selectedDay === "All Days" ? null : selectedDay,
         meals,
         createdAt: new Date().toISOString()
       };
@@ -168,8 +194,8 @@ export default function CreateDietPlan() {
       
       await addDietPlan(plan);
       setPlanName("");
-      setMeals([{ id: '1', name: "Breakfast", time: "07:00", items: [], calories: 0, protein: 0 }]);
-      setErrors({ planName: "", dailyCalories: "", dailyProtein: "", meals: [] });
+      setMeals([{ id: '1', name: "Breakfast", time: "07:00", items: [], calories: 0, protein: 0, carbs: 0, fats: 0 }]);
+      setErrors({ planName: "", dailyCalories: "", dailyProtein: "", dailyCarbs: "", dailyFats: "", meals: [] });
       
       navigate("/trainer/dashboard");
     } catch (error) {
@@ -178,13 +204,10 @@ export default function CreateDietPlan() {
     }
   };
 
-  const totalCalories = meals.reduce((sum, meal) =>
-    sum + meal.items.reduce((mealSum, item) => mealSum + (item.calories || 0), 0), 0
-  );
-
-  const totalProtein = meals.reduce((sum, meal) =>
-    sum + meal.items.reduce((mealSum, item) => mealSum + (item.protein || 0), 0), 0
-  );
+  const totalCalories = meals.reduce((sum, meal) => sum + (meal.calories || 0), 0);
+  const totalProtein = meals.reduce((sum, meal) => sum + (meal.protein || 0), 0);
+  const totalCarbs = meals.reduce((sum, meal) => sum + (meal.carbs || 0), 0);
+  const totalFats = meals.reduce((sum, meal) => sum + (meal.fats || 0), 0);
 
   return (
     <DashboardLayout role="trainer">
@@ -230,6 +253,21 @@ export default function CreateDietPlan() {
           </Card>
 
           <Card>
+            <label className="block text-sm text-zinc-400 mb-2 font-bold uppercase tracking-tighter">Schedule Day</label>
+            <select
+              value={selectedDay}
+              onChange={(e) => setSelectedDay(e.target.value)}
+              disabled={isSaving}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-cyan-400 cursor-pointer disabled:opacity-50"
+            >
+              {days.map(day => (
+                <option key={day} value={day}>{day}</option>
+              ))}
+            </select>
+            <p className="text-[10px] text-zinc-500 mt-2 uppercase tracking-tight">Select 'All Days' for a general plan</p>
+          </Card>
+
+          <Card>
             <label className="block text-sm text-zinc-400 mb-2 font-bold uppercase tracking-tighter">Daily Calories</label>
             <input
               type="number"
@@ -260,17 +298,49 @@ export default function CreateDietPlan() {
             />
             {errors.dailyProtein && <p className="text-red-400 text-xs mt-1">{errors.dailyProtein}</p>}
           </Card>
+
+          <Card>
+            <label className="block text-sm text-zinc-400 mb-2 font-bold uppercase tracking-tighter">Daily Carbs (g)</label>
+            <input
+              type="number"
+              value={dailyCarbs}
+              onChange={(e) => {
+                const val = parseInt(e.target.value) || 0;
+                setDailyCarbs(val);
+                setErrors(prev => ({ ...prev, dailyCarbs: validateField('dailyCarbs', val) }));
+              }}
+              disabled={isSaving}
+              className={`w-full bg-zinc-800 border ${errors.dailyCarbs ? 'border-red-400/50' : 'border-zinc-700'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-cyan-400 disabled:opacity-50`}
+            />
+            {errors.dailyCarbs && <p className="text-red-400 text-xs mt-1">{errors.dailyCarbs}</p>}
+          </Card>
+
+          <Card>
+            <label className="block text-sm text-zinc-400 mb-2 font-bold uppercase tracking-tighter">Daily Fats (g)</label>
+            <input
+              type="number"
+              value={dailyFats}
+              onChange={(e) => {
+                const val = parseInt(e.target.value) || 0;
+                setDailyFats(val);
+                setErrors(prev => ({ ...prev, dailyFats: validateField('dailyFats', val) }));
+              }}
+              disabled={isSaving}
+              className={`w-full bg-zinc-800 border ${errors.dailyFats ? 'border-red-400/50' : 'border-zinc-700'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-cyan-400 disabled:opacity-50`}
+            />
+            {errors.dailyFats && <p className="text-red-400 text-xs mt-1">{errors.dailyFats}</p>}
+          </Card>
         </div>
 
         {/* DAILY TOTALS */}
         <Card className="bg-gradient-to-br from-cyan-500/10 to-purple-500/10 border-cyan-500/30 text-white">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div>
-              <p className="text-sm text-zinc-400">Total Calories</p>
-              <p className="text-2xl font-bold">
-                {totalCalories} <span className="text-sm text-zinc-500">/ {dailyCalories}</span>
+              <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest mb-1">Calories</p>
+              <p className="text-2xl font-black">
+                {totalCalories} <span className="text-xs text-zinc-500 font-medium">/ {dailyCalories}</span>
               </p>
-              <div className="h-2 bg-white/5 rounded-full overflow-hidden mt-2">
+              <div className="h-1.5 bg-white/5 rounded-full overflow-hidden mt-3">
                 <div
                   className={`h-full bg-gradient-to-r ${totalCalories > dailyCalories ? 'from-red-500 to-red-600' : 'from-cyan-500 to-cyan-600'} rounded-full transition-all duration-500`}
                   style={{ width: `${Math.min((totalCalories / dailyCalories) * 100, 100)}%` }}
@@ -278,14 +348,38 @@ export default function CreateDietPlan() {
               </div>
             </div>
             <div>
-              <p className="text-sm text-zinc-400">Total Protein</p>
-              <p className="text-2xl font-bold">
-                {totalProtein}g <span className="text-sm text-zinc-500">/ {dailyProtein}g</span>
+              <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest mb-1">Protein</p>
+              <p className="text-2xl font-black">
+                {totalProtein}g <span className="text-xs text-zinc-500 font-medium">/ {dailyProtein}g</span>
               </p>
-              <div className="h-2 bg-white/5 rounded-full overflow-hidden mt-2">
+              <div className="h-1.5 bg-white/5 rounded-full overflow-hidden mt-3">
                 <div
                   className={`h-full bg-gradient-to-r ${totalProtein > dailyProtein ? 'from-red-500 to-red-600' : 'from-blue-500 to-blue-600'} rounded-full transition-all duration-500`}
                   style={{ width: `${Math.min((totalProtein / dailyProtein) * 100, 100)}%` }}
+                />
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest mb-1">Carbs</p>
+              <p className="text-2xl font-black">
+                {totalCarbs}g <span className="text-xs text-zinc-500 font-medium">/ {dailyCarbs}g</span>
+              </p>
+              <div className="h-1.5 bg-white/5 rounded-full overflow-hidden mt-3">
+                <div
+                  className={`h-full bg-gradient-to-r ${totalCarbs > dailyCarbs ? 'from-red-500 to-red-600' : 'from-green-500 to-green-600'} rounded-full transition-all duration-500`}
+                  style={{ width: `${Math.min((totalCarbs / dailyCarbs) * 100, 100)}%` }}
+                />
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest mb-1">Fats</p>
+              <p className="text-2xl font-black">
+                {totalFats}g <span className="text-xs text-zinc-500 font-medium">/ {dailyFats}g</span>
+              </p>
+              <div className="h-1.5 bg-white/5 rounded-full overflow-hidden mt-3">
+                <div
+                  className={`h-full bg-gradient-to-r ${totalFats > dailyFats ? 'from-red-500 to-red-600' : 'from-orange-500 to-orange-600'} rounded-full transition-all duration-500`}
+                  style={{ width: `${Math.min((totalFats / dailyFats) * 100, 100)}%` }}
                 />
               </div>
             </div>
@@ -357,8 +451,7 @@ export default function CreateDietPlan() {
 
 // MEAL CARD
 function MealCard({ meal, onUpdate, onRemove, onAddFood, onRemoveFood, onUpdateFood, disabled, errors }) {
-  const totalCalories = meal.items.reduce((sum, item) => sum + (item.calories || 0), 0);
-  const totalProtein = meal.items.reduce((sum, item) => sum + (item.protein || 0), 0);
+  const { calories, protein, carbs, fats } = meal;
 
   return (
     <div className={`p-4 bg-zinc-800/50 rounded-lg border ${errors ? 'border-red-400/30' : 'border-zinc-800'} ${disabled ? 'opacity-70 pointer-events-none' : ''}`}>
@@ -416,32 +509,48 @@ function MealCard({ meal, onUpdate, onRemove, onAddFood, onRemoveFood, onUpdateF
                 placeholder="Qty"
                 className={`bg-zinc-900 border ${errors?.foodItems?.[index]?.quantity ? 'border-red-400/50' : 'border-zinc-700'} rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-cyan-400 transition-all`}
               />
-              <input
-                type="number"
-                value={item.calories}
-                disabled={disabled}
-                onChange={(e) => onUpdateFood(meal.id, index, "calories", parseInt(e.target.value) || 0)}
-                placeholder="Cal"
-                className={`bg-zinc-900 border ${errors?.foodItems?.[index]?.calories ? 'border-red-400/50' : 'border-zinc-700'} rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-cyan-400 transition-all`}
-              />
-              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  value={item.calories}
+                  disabled={disabled}
+                  onChange={(e) => onUpdateFood(meal.id, index, "calories", parseInt(e.target.value) || 0)}
+                  placeholder="Cal"
+                  className={`bg-zinc-900 border ${errors?.foodItems?.[index]?.calories ? 'border-red-400/50' : 'border-zinc-700'} rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400 transition-all`}
+                />
                 <input
                   type="number"
                   value={item.protein}
                   disabled={disabled}
                   onChange={(e) => onUpdateFood(meal.id, index, "protein", parseInt(e.target.value) || 0)}
-                  placeholder="Protein"
-                  className={`flex-1 bg-zinc-900 border ${errors?.foodItems?.[index]?.protein ? 'border-red-400/50' : 'border-zinc-700'} rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-cyan-400 transition-all`}
+                  placeholder="P"
+                  className={`bg-zinc-900 border ${errors?.foodItems?.[index]?.protein ? 'border-red-400/50' : 'border-zinc-700'} rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400 transition-all`}
                 />
-                {!disabled && (
-                  <button
-                    onClick={() => onRemoveFood(meal.id, index)}
-                    className="p-1.5 hover:bg-red-500/10 rounded transition-colors group"
-                  >
-                    <Trash2 className="w-3 h-3 text-red-500/50 group-hover:text-red-400" />
-                  </button>
-                )}
-              </div>
+                <input
+                  type="number"
+                  value={item.carbs}
+                  disabled={disabled}
+                  onChange={(e) => onUpdateFood(meal.id, index, "carbs", parseInt(e.target.value) || 0)}
+                  placeholder="C"
+                  className={`bg-zinc-900 border ${errors?.foodItems?.[index]?.carbs ? 'border-red-400/50' : 'border-zinc-700'} rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400 transition-all`}
+                />
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    value={item.fats}
+                    disabled={disabled}
+                    onChange={(e) => onUpdateFood(meal.id, index, "fats", parseInt(e.target.value) || 0)}
+                    placeholder="F"
+                    className={`flex-1 bg-zinc-900 border ${errors?.foodItems?.[index]?.fats ? 'border-red-400/50' : 'border-zinc-700'} rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400 transition-all`}
+                  />
+                  {!disabled && (
+                    <button
+                      onClick={() => onRemoveFood(meal.id, index)}
+                      className="p-1.5 hover:bg-red-500/10 rounded transition-colors group"
+                    >
+                      <Trash2 className="w-3 h-3 text-red-500/50 group-hover:text-red-400" />
+                    </button>
+                  )}
+                </div>
             </div>
             {errors?.foodItems?.[index] && (
               <div className="flex gap-2 ml-1">
@@ -464,12 +573,14 @@ function MealCard({ meal, onUpdate, onRemove, onAddFood, onRemoveFood, onUpdateF
       </button>
 
       {/* Meal Totals */}
-      <div className="pt-3 border-t border-zinc-700 flex justify-between text-xs font-medium uppercase tracking-widest">
-        <span className="text-zinc-500">Meal Totals</span>
-        <span className="text-white">
-          <strong className="text-cyan-400">{totalCalories}</strong> kcal • 
-          <strong className="text-blue-400 ml-2">{totalProtein}g</strong> protein
-        </span>
+      <div className="pt-3 border-t border-zinc-700 flex justify-between text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+        <span>Meal Totals</span>
+        <div className="flex items-center gap-4">
+          <span className="text-white"><strong className="text-cyan-400">{calories}</strong> kcal</span>
+          <span className="text-white"><strong className="text-blue-400">{protein}g</strong> P</span>
+          <span className="text-white"><strong className="text-green-400">{carbs}g</strong> C</span>
+          <span className="text-white"><strong className="text-orange-400">{fats}g</strong> F</span>
+        </div>
       </div>
     </div>
   );

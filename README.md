@@ -99,7 +99,14 @@ pip install -r requirements.txt
 
 ```bash
 cp .env.example .env
-# Edit .env — set MONGO_URI and JWT_SECRET_KEY at minimum
+# Edit .env — set MONGO_URI and a strong JWT_SECRET_KEY (at least 32 characters)
+```
+
+You can validate the backend configuration locally before starting the app:
+
+```bash
+cd backend
+python validate_config.py
 ```
 
 ### 4 — Seed development data (optional but recommended)
@@ -231,11 +238,17 @@ All routes are prefixed with `/api/v1`.
 Update your frontend `api.js` base URL:
 
 ```js
-// src/api.js
+// src/services/api.js
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1',
   ...
 })
+```
+
+For production deployments, set `VITE_API_BASE_URL` in `frontend/.env.production`:
+
+```bash
+VITE_API_BASE_URL=https://api.yourapp.com/api/v1
 ```
 
 The JWT interceptor in `api.js` already reads from `localStorage` under key  

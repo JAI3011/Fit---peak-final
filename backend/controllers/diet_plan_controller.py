@@ -42,7 +42,10 @@ async def create_diet_plan(trainer_id: str, payload: DietPlanCreateRequest) -> d
         "description": payload.description,
         "daily_calories": payload.daily_calories,
         "daily_protein": payload.daily_protein,
+        "daily_carbs": payload.daily_carbs,
+        "daily_fats": payload.daily_fats,
         "duration": payload.duration,
+        "day": payload.day,
         "meals": meals,
         "trainer_id": trainer_id,
         "created_at": utc_now_str(),
@@ -116,9 +119,27 @@ async def assign_diet_plan(trainer_id: str, plan_id: str, client_id: str) -> dic
         "assigned_at": utc_now_str(),
     }
 
+    update_query = {
+        "$set": {
+            "assigned_diet": plan_data, 
+            "updated_at": utc_now_str()
+        }
+    }
+
+    # If the plan is for a specific day, add it to that day,
+    # otherwise, if it's for 'All Days', populate the entire schedule.
+    day = plan_data.get("day")
+    if day:
+        update_query["$set"][f"diet_schedule.{day}"] = plan_data
+    else:
+        # If plan is for "All Days", store it for every day of the week
+        weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        for d in weekdays:
+            update_query["$set"][f"diet_schedule.{d}"] = plan_data
+
     result = await db["users"].find_one_and_update(
         {"_id": validate_object_id(client_id)},
-        {"$set": {"assigned_diet": plan_data, "updated_at": utc_now_str()}},
+        update_query,
         return_document=True,
     )
     return _safe(doc_to_dict(result))

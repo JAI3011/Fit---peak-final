@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Activity, Lock, Mail, ArrowRight, Loader, User, Ruler, Weight, Calendar, CheckCircle } from 'lucide-react';
+import { Activity, Lock, Mail, ArrowRight, Loader, User, Ruler, Weight, Calendar, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './SignUp.css';
 
@@ -105,16 +106,44 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative py-12">
-      <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px]" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px]" />
-      
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-2xl relative z-10"
+    <div 
+      className="signup-container"
+      style={{
+        backgroundImage: `url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop')`
+      }}
+    >
+      {/* BACK LINK - TOP LEFT */}
+      <Link 
+        to="/"
+        className="back-link"
       >
-        <div className="glass-panel p-8 sm:p-10 rounded-[2rem] shadow-2xl">
+        <ArrowLeft className="w-4 h-4" />
+        <span>Back to Home</span>
+      </Link>
+
+      {/* MOTIVATIONAL CONTENT */}
+      <div className="signup-left-content">
+        <h1>Level Up Your Fitness</h1>
+        <p>The transformation begins now. Join a community that pushes boundaries.</p>
+
+        <div>
+          <p>🏋️ Personalized workout plans</p>
+          <p>📊 Real-time progress analytics</p>
+          <p>🏅 Expert community support</p>
+        </div>
+      </div>
+
+      <div className="signup-right">
+        {/* Background glow */}
+        <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-cyan-500/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-[120px]" />
+
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-2xl relative z-10"
+        >
+          <div className="glass-panel p-8 sm:p-10 rounded-[2rem] shadow-2xl">
           
           <div className="flex justify-center mb-6">
             <div className="p-3 rounded-2xl bg-white/5 border border-white/10 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
@@ -307,6 +336,7 @@ const SignUp = () => {
           </p>
         </div>
       </motion.div>
+      </div>
     </div>
   );
 };

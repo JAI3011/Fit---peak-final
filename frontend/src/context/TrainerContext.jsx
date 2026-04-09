@@ -158,9 +158,12 @@ export const TrainerProvider = ({ children }) => {
       const res = await trainerAPI.createDietPlan({
         name:           planData.name,
         description:    planData.description || '',
-        daily_calories: planData.dailyCalories || planData.calories || 2000,
+        daily_calories: planData.dailyCalories || 2000,
         daily_protein:  planData.dailyProtein  || 120,
+        daily_carbs:    planData.dailyCarbs    || 250,
+        daily_fats:     planData.dailyFats     || 60,
         duration:       planData.duration      || 'Flexible',
+        day:            planData.day           || null,
         meals:          planData.meals         || [],
       });
       setDietPlans(prev => [...prev, res.data]);

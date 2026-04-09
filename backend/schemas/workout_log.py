@@ -16,6 +16,7 @@ class WorkoutLogCreateRequest(BaseModel):
     workout_id: Optional[str] = None
     workout_name: str
     exercises: List[ExerciseLogSchema]
+    calories: Optional[float] = Field(default=None, ge=0)
     date: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
 class WorkoutLogResponse(BaseModel):

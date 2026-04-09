@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status
+from pymongo import ReturnDocument
+from pymongo.errors import DuplicateKeyError
 
 from config.database import get_database
 from schemas.auth import (
@@ -13,9 +15,19 @@ from utils.helpers import doc_to_dict, utc_now_str, today_date_str
 from utils.email_service import send_otp_email
 
 
+_ADMIN_SETUP_COLLECTION = "admin_setup_state"
+_ADMIN_SETUP_ID = "admin_setup"
+
+
 async def register_user(payload: RegisterRequest) -> dict:
     db = get_database()
     normalized_email = payload.email.strip().lower()
+
+    if payload.role == "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin accounts cannot be self-registered",
+        )
 
     # Check duplicate email
     existing = await db["users"].find_one({"email": normalized_email})
@@ -125,44 +137,124 @@ async def create_admin_account(payload) -> dict:
             detail="Email already registered",
         )
 
-    # Security: Check if any admins exist
-    admin_count = await db["users"].count_documents({"role": "admin"})
-    if admin_count > 0:
+    setup_state = await _claim_admin_setup(db, normalized_email)
+    if setup_state is None:
+        existing_state = await db[_ADMIN_SETUP_COLLECTION].find_one({"_id": _ADMIN_SETUP_ID})
+        if existing_state and existing_state.get("completed"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Admin setup has already been completed.",
+            )
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin accounts can only be created by existing admins. Use the admin panel.",
+            status_code=status.HTTP_423_LOCKED,
+            detail="Admin setup is already in progress. Please retry shortly.",
         )
 
-    # Create first admin account
-    doc = {
-        "name": payload.name,
-        "email": normalized_email,  # normalized
-        "password_hash": hash_password(payload.password),
-        "role": "admin",
-        "status": "active",
-        "joined": today_date_str(),
-        "created_at": utc_now_str(),
-        "calories_goal": 2400,
-        "calories_consumed": 0,
-        "overall_progress": 0,
-        "macros": {"protein": 0, "carbs": 0, "fats": 0},
-        "trainer_id": None,
-        "assigned_workout": None,
-        "assigned_diet": None,
-        "progress_data": [],
-    }
+    setup_finalized = False
+    try:
+        # Security: Check if any admins exist only after the setup lock is held.
+        admin_count = await db["users"].count_documents({"role": "admin"})
+        if admin_count > 0:
+            await _mark_admin_setup_complete(db)
+            setup_finalized = True
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Admin setup has already been completed.",
+            )
 
-    result = await db["users"].insert_one(doc)
-    doc["_id"] = result.inserted_id
-    user = doc_to_dict(doc)
+        # Create first admin account
+        doc = {
+            "name": payload.name,
+            "email": normalized_email,  # normalized
+            "password_hash": hash_password(payload.password),
+            "role": "admin",
+            "status": "active",
+            "joined": today_date_str(),
+            "created_at": utc_now_str(),
+            "calories_goal": 2400,
+            "calories_consumed": 0,
+            "overall_progress": 0,
+            "macros": {"protein": 0, "carbs": 0, "fats": 0},
+            "trainer_id": None,
+            "assigned_workout": None,
+            "assigned_diet": None,
+            "progress_data": [],
+        }
 
-    token = create_access_token({"sub": user["id"], "role": user["role"]})
-    return {"access_token": token, "token_type": "bearer", "user": _safe_user(user)}
+        result = await db["users"].insert_one(doc)
+        doc["_id"] = result.inserted_id
+        user = doc_to_dict(doc)
+
+        await _mark_admin_setup_complete(db)
+        setup_finalized = True
+
+        token = create_access_token({"sub": user["id"], "role": user["role"]})
+        return {"access_token": token, "token_type": "bearer", "user": _safe_user(user)}
+    except DuplicateKeyError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email already registered",
+        )
+    finally:
+        if not setup_finalized:
+            await _release_admin_setup_lock(db)
+
+
+async def _claim_admin_setup(db, normalized_email: str) -> dict | None:
+    now = utc_now_str()
+    try:
+        return await db[_ADMIN_SETUP_COLLECTION].find_one_and_update(
+            {
+                "_id": _ADMIN_SETUP_ID,
+                "locked": {"$ne": True},
+                "completed": {"$ne": True},
+            },
+            {
+                "$set": {
+                    "locked": True,
+                    "locked_by": normalized_email,
+                    "locked_at": now,
+                },
+                "$setOnInsert": {
+                    "created_at": now,
+                },
+            },
+            upsert=True,
+            return_document=ReturnDocument.AFTER,
+        )
+    except DuplicateKeyError:
+        return None
+
+
+async def _mark_admin_setup_complete(db) -> None:
+    await db[_ADMIN_SETUP_COLLECTION].update_one(
+        {"_id": _ADMIN_SETUP_ID},
+        {
+            "$set": {
+                "locked": False,
+                "completed": True,
+                "completed_at": utc_now_str(),
+            }
+        },
+        upsert=True,
+    )
+
+
+async def _release_admin_setup_lock(db) -> None:
+    await db[_ADMIN_SETUP_COLLECTION].delete_one({"_id": _ADMIN_SETUP_ID})
 
 
 def _safe_user(user: dict) -> dict:
     """Strip sensitive fields before returning to client."""
     return {k: v for k, v in user.items() if k not in ("password_hash",)}
+
+
+async def get_me(current_user: dict) -> dict:
+    """
+    Returns the current authenticated user's profile.
+    Used by the frontend to restore active sessions.
+    """
+    return _safe_user(current_user)
 
 
 async def request_otp(payload: RequestOTPRequest) -> dict:

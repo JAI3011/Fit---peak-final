@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Save, Check } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useTrainer } from '../context/TrainerContext';
 
 const WorkoutBuilder = () => {
@@ -27,7 +28,7 @@ const WorkoutBuilder = () => {
 
   const handleSave = async () => {
     if (!planName.trim()) {
-      alert("Please enter a plan name");
+      toast.error("Please enter a plan name");
       return;
     }
 

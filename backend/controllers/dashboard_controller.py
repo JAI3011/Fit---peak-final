@@ -19,12 +19,13 @@ AI_TIPS = [
     "Consistency is better than perfection. Keep going!"
 ]
 
-def get_next_meal(meals: dict) -> str:
+def get_next_meal(meals: dict, timezone_offset_minutes: int = 0) -> str:
     """Determine the next meal based on current hour."""
     if not meals:
         return "No plan assigned"
     
-    hour = datetime.now().hour
+    current_time = datetime.now(timezone.utc) + timedelta(minutes=timezone_offset_minutes)
+    hour = current_time.hour
     if hour < 10: return "Breakfast"
     if hour < 12: return "Mid-Morning Snack"
     if hour < 15: return "Lunch"
@@ -138,7 +139,7 @@ async def _build_achievements(db, user_id: str, overall_progress: float) -> list
 
     return achievements
 
-async def get_user_dashboard(current_user: dict) -> dict:
+async def get_user_dashboard(current_user: dict, timezone_offset_minutes: int = 0) -> dict:
     """
     Returns the logged-in user's full profile including
     trainer name, assigned plans, macros, and progress data.
@@ -237,7 +238,7 @@ async def get_user_dashboard(current_user: dict) -> dict:
         **{k: v for k, v in current_user.items() if k != "password_hash"},
         "trainer_name": trainer_name,
         "daily_tip": random.choice(AI_TIPS),
-        "next_meal_suggestion": get_next_meal(meals),
+        "next_meal_suggestion": get_next_meal(meals, timezone_offset_minutes),
         "today_workout_name": (current_user.get("assigned_workout") or {}).get("name", "Rest Day"),
         "weekly_schedule": weekly_schedule,
         "achievements": achievements,

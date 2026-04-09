@@ -4,6 +4,9 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  // Keep frontend env files scoped to this directory only.
+  envDir: '.',
+  envPrefix: 'VITE_',
   build: {
     chunkSizeWarningLimit: 700,
     rollupOptions: {

@@ -18,7 +18,9 @@ const ForgotPassword = () => {
     try {
       const data = await requestOTP(email);
       setMessage(data.message || "OTP sent to your email.");
-      navigate(`/reset-password?email=${encodeURIComponent(email)}`);
+      setTimeout(() => {
+        navigate(`/reset-password?email=${encodeURIComponent(email)}`);
+      }, 1200);
     } catch (error) {
       setMessage(error.message || "Something went wrong. Please try again.");
     } finally {

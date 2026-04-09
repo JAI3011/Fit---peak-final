@@ -100,6 +100,18 @@ export const FitnessProvider = ({ children }) => {
     }
   }, [user?.id, user?.overallProgress]);
 
+  // ✅ Refresh user data manually
+  const refreshUser = useCallback(async () => {
+    // Artificial delay to ensure race conditions don't occur when multiple updates happen rapidly
+    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const res = await api.get('/dashboard');
+      setUser(res.data);
+    } catch (err) {
+      console.error('[FITNESS] Failed to refresh user:', err);
+    }
+  }, []);
+
   return (
     <FitnessContext.Provider value={{
       user,
@@ -108,6 +120,7 @@ export const FitnessProvider = ({ children }) => {
       addCalories,
       updateMacros,
       addProgress,
+      refreshUser,
     }}>
       {children}
     </FitnessContext.Provider>
